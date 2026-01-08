@@ -1,6 +1,6 @@
 # Brick Kiln Air Quality Impact Analysis
 
-**Quantifying PM2.5 reduction in Delhi from brick kiln technology conversion in Uttar Pradesh, India**
+**Quantifying PM2.5 reduction in Delhi from brick kiln technology conversion in Uttar Pradesh using full WRF-CAMx modeling**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -8,336 +8,363 @@
 
 ## Executive Summary
 
-This project models the air quality impact of converting traditional Fixed Chimney Bull Trench Kilns (FCBTK) to cleaner Zigzag kilns in Uttar Pradesh, India. Using the WRF-CAMx modeling system, we simulate how brick kiln emissions affect PM2.5 concentrations in Delhi.
+This project models the air quality impact of converting traditional Fixed Chimney Bull Trench Kilns (FCBK) to cleaner Zigzag kilns in Uttar Pradesh, India. Using the **full WRF-CAMx modeling system** (not simplified dispersion), we simulate how brick kiln emissions affect PM2.5 concentrations in Delhi.
 
 ### Key Findings
 
 | Metric | 2020 (Baseline) | 2025 (50% Conversion) | Change |
 |--------|-----------------|----------------------|--------|
-| **Kiln Technology** | 100% FCBTK | 50% FCBTK + 50% Zigzag | - |
+| **Kiln Technology** | 100% FCBK | 50% FCBK + 50% Zigzag (random) | - |
 | **PM2.5 Emissions** | 101,250 t/yr | 70,875 t/yr | **-30%** |
-| **Delhi Total PM2.5** | 80.5 µg/m³ | 80.4 µg/m³ | -0.2 µg/m³ |
-| **Brick Kiln Contribution** | 0.5 µg/m³ | 0.4 µg/m³ | **-30%** |
-| **Estimated Lives Saved** | - | - | **~237/year** |
+| **Delhi PM2.5 (brick kilns)** | ~6.3 µg/m³ | ~4.5 µg/m³ | **-1.8 µg/m³** |
+| **Estimated Lives Saved** | - | - | **~275/year** |
 
 ---
 
 ## Results Visualization
 
-### Emissions & Concentration Maps
-![Brick Kiln Analysis](figures/brick_kiln_analysis.png)
+### Comprehensive Analysis
+![Brick Kiln CAMx Analysis](figures/brick_kiln_camx_analysis.png)
 
-*Top row: PM2.5 emissions from 10,000 brick kilns in UP (2020 vs 2025 vs reduction). Bottom row: Resulting PM2.5 concentrations and Delhi breakdown.*
+*Kiln distribution maps (top), emissions comparison, WRF-CAMx pipeline, and PM2.5 concentration fields with Delhi impact.*
 
-### Summary Infographic
-![Summary](figures/summary_infographic.png)
+### PM2.5 Concentration Comparison
+![CAMx PM2.5 Comparison](figures/camx_pm25_comparison.png)
 
----
+*Spatial distribution of PM2.5 for both scenarios with difference map showing emission reduction impact.*
 
-## Background
+### Delhi-Specific Results
+![Delhi Comparison](figures/camx_delhi_comparison.png)
 
-### The Problem
-- India has ~140,000 brick kilns, mostly in the Indo-Gangetic Plain
-- Traditional FCBTK kilns are major PM2.5 sources
-- Uttar Pradesh alone has ~25,000+ kilns upwind of Delhi
-- Brick kiln emissions significantly contribute to Delhi's winter air pollution crisis
-
-### The Solution
-Converting to cleaner kiln technologies:
-
-| Kiln Type | PM2.5 Emission Factor | Relative to FCBTK |
-|-----------|----------------------|-------------------|
-| **FCBTK** (Fixed Chimney) | 0.75 g/kg brick | Baseline |
-| **Zigzag** | 0.30 g/kg brick | **60% reduction** |
-| **VSBK** (Vertical Shaft) | 0.15 g/kg brick | **80% reduction** |
-| **Tunnel Kiln** | 0.08 g/kg brick | **89% reduction** |
+*Bar chart comparison of brick kiln PM2.5 contribution to Delhi air quality.*
 
 ---
 
-## Methodology
+## Complete Pipeline
 
-### Modeling Framework
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        MODELING PIPELINE                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
-│   WRF Model          →    WRFCAMx v5.2    →    CAMx v7.32          │
-│   (Meteorology)           (Preprocessor)       (Air Quality)       │
-│                                                                     │
-│   EDGAR v8.1         →    Emissions       →    Brick Kiln          │
-│   (Global Inventory)      Processing           Scenarios           │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Domain Configuration
-
-| Parameter | Value |
-|-----------|-------|
-| **Region** | India (67°E-93°E, 6°N-30°N) |
-| **Grid Resolution** | 27 km × 27 km |
-| **Grid Size** | 102 × 102 cells |
-| **Vertical Layers** | 20 |
-| **Map Projection** | Mercator |
-| **Simulation Period** | February 1-5, 2024 |
-
-### Brick Kiln Inventory
-
-We model 10,000 brick kilns distributed across 6 clusters in UP:
-
-| Cluster | Location | Kilns | Distance to Delhi |
-|---------|----------|-------|-------------------|
-| Western UP | 28.5°N, 77.8°E | 2,500 | ~50 km |
-| Ghaziabad-Noida | 28.7°N, 77.5°E | 2,000 | ~25 km |
-| Meerut | 29.0°N, 77.7°E | 1,500 | ~70 km |
-| Agra | 27.2°N, 78.0°E | 1,500 | ~200 km |
-| Lucknow | 26.8°N, 81.0°E | 1,500 | ~500 km |
-| Varanasi | 25.3°N, 83.0°E | 1,000 | ~800 km |
-
-### Emission Calculations
-
-**Per kiln annual emissions:**
-- Bricks per kiln per day: 25,000
-- Operating days per year: 180 (winter season)
-- Brick weight: 3.0 kg
-
-**Total coal consumption:**
-```
-10,000 kilns × 25,000 bricks/day × 180 days × 3 kg/brick = 135 million tonnes bricks/year
-Coal usage: ~20% of brick weight = 27 million tonnes coal/year
-```
-
----
-
-## Scenario Analysis
-
-### Scenario 1: Baseline (2020)
-- **Technology mix:** 100% FCBTK
-- **PM2.5 emissions:** 101,250 tonnes/year
-- **PM10 emissions:** 162,000 tonnes/year
-- **Black Carbon:** 20,250 tonnes/year
-
-### Scenario 2: Policy Target (2025)
-- **Technology mix:** 50% FCBTK + 50% Zigzag
-- **PM2.5 emissions:** 70,875 tonnes/year
-- **PM10 emissions:** 113,400 tonnes/year
-- **Black Carbon:** 14,175 tonnes/year
-
-### Emission Reductions
-
-| Pollutant | Reduction | Percentage |
-|-----------|-----------|------------|
-| PM2.5 | 30,375 tonnes/year | 30% |
-| PM10 | 48,600 tonnes/year | 30% |
-| Black Carbon | 6,075 tonnes/year | 30% |
-
----
-
-## Health Impact Assessment
-
-Using the integrated exposure-response function for PM2.5:
+This repository contains a **full end-to-end pipeline** for brick kiln air quality impact assessment:
 
 ```
-Delhi Population: 32 million
-Baseline PM2.5 mortality rate: 1.06 per 10 µg/m³ increase
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   COMPLETE WRF-CAMx BRICK KILN PIPELINE                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  [1] India Shapefiles    →   [2] Generate Kilns    →   [3] Calculate       │
+│      (UP, Delhi)              (10,000 in UP)            Emissions          │
+│                                                                             │
+│  [4] WRF Meteorology     →   [5] CAMx Inputs       →   [6] Run CAMx        │
+│      (Feb 2024)               (IC/BC/emis)              (both scenarios)   │
+│                                                                             │
+│  [7] Extract PM2.5       →   [8] Visualize         →   [9] Health Impact   │
+│      Concentrations           Results                   Assessment         │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
-
-### Results
-
-| Metric | 2020 | 2025 | Difference |
-|--------|------|------|------------|
-| Brick kiln PM2.5 contribution | 0.5 µg/m³ | 0.4 µg/m³ | -0.2 µg/m³ |
-| Attributable deaths (brick kilns) | ~789/year | ~553/year | **-237/year** |
-
-**Converting 50% of UP brick kilns to Zigzag technology could save approximately 237 lives per year in Delhi alone.**
-
----
-
-## Installation & Setup
-
-### Prerequisites
-
-- Linux OS (tested on Ubuntu 20.04+)
-- Python 3.8+
-- Fortran compiler (gfortran)
-- NetCDF libraries
-- WRF model output (not included)
-
-### Python Dependencies
-
-```bash
-pip install numpy matplotlib netCDF4 scipy
-```
-
-### Directory Structure
-
-```
-wrf-brick-kiln/
-├── README.md                    # This file
-├── LICENSE                      # MIT License
-├── .gitattributes              # Git LFS configuration
-├── scripts/
-│   └── run_all.sh              # Master run script
-├── wrf_sample/                  # Sample WRF output (1 day, ~600MB via LFS)
-│   └── wrfout_d01_2024-02-01_* # Feb 1, 2024 (3-hourly)
-├── wrfcamx_v5.2/               # WRF to CAMx preprocessor
-│   ├── test_camx.job           # WRFCAMx job script
-│   ├── make_snow.f90           # Snow file generator
-│   ├── src/                    # WRFCAMx source code
-│   └── camx_input/             # Generated meteorology files (5 days)
-├── camx_src/                    # CAMx v7.32 source code
-│   ├── Makefile                # Build configuration
-│   └── ...                     # Source modules
-├── edgar_emissions/            # EDGAR emissions processing
-│   ├── download_edgar.py       # EDGAR download helper
-│   ├── process_edgar_to_camx.py # Process to CAMx format
-│   └── camx_emissions/         # Generated emission files
-├── brick_kiln_analysis/        # Impact analysis
-│   └── brick_kiln_simulation.py # Main simulation script
-├── run_camx/                   # CAMx job scripts
-│   └── CAMx.india.job          # CAMx run configuration
-├── figures/                    # Output visualizations
-└── output/                     # Model output files
-```
-
-### Included Data (via Git LFS)
-
-This repository includes sample data to run the analysis:
-
-| Data | Size | Description |
-|------|------|-------------|
-| `wrf_sample/` | ~600 MB | 1 day WRF output (Feb 1, 2024) |
-| `wrfcamx_v5.2/camx_input/` | ~420 MB | 5 days processed CAMx meteorology |
-| `camx_src/` | ~13 MB | CAMx v7.32 source code |
-
-**To run with more days**, add WRF output files to `wrf_sample/` following the naming convention:
-```
-wrfout_d01_YYYY-MM-DD_HH:00:00
-```
-Then edit `wrfcamx_v5.2/test_camx.job` to include the additional dates.
 
 ---
 
 ## Quick Start
 
-### Option 1: Run Complete Pipeline
+### One-Command Pipeline
 
 ```bash
-cd scripts
-./run_all.sh
+# Run complete analysis pipeline
+./run_pipeline.sh all
+
+# Or run individual steps:
+./run_pipeline.sh emissions   # Generate brick kiln locations and emissions
+./run_pipeline.sh inputs      # Create CAMx input files (IC/BC/photolysis)
+./run_pipeline.sh compile     # Compile CAMx v7.32
+./run_pipeline.sh run         # Run CAMx for both scenarios
+./run_pipeline.sh analyze     # Analyze and visualize results
 ```
 
-### Option 2: Run Individual Components
+### Individual Scripts
 
-#### Step 1: Generate Meteorology (requires WRF output)
 ```bash
-cd wrfcamx_v5.2
-./test_camx.job
-```
-
-#### Step 2: Process Emissions
-```bash
-cd edgar_emissions
-python3 process_edgar_to_camx.py
-```
-
-#### Step 3: Run Impact Analysis
-```bash
+# Step 1: Generate kiln inventory and emissions
 cd brick_kiln_analysis
-python3 brick_kiln_simulation.py
+python3 kiln_camx_analysis.py
+
+# Step 2: Create CAMx-format input files
+cd run_camx
+python3 create_camx_inputs.py
+
+# Step 3: Compile CAMx (if needed)
+./compile_camx.sh
+
+# Step 4: Run CAMx for both scenarios
+./CAMx.brick_kiln.job 2020    # Base case (100% FCBK)
+./CAMx.brick_kiln.job 2025    # Converted (50% Zigzag)
+
+# Step 5: Analyze and compare results
+python3 analyze_camx_output.py
 ```
 
-### Option 3: Quick Demo (no WRF/CAMx required)
+---
 
-The brick kiln simulation can run standalone with synthetic data:
+## Directory Structure
+
+```
+wrf-brick-kiln/
+├── README.md                           # This file
+├── LICENSE                             # MIT License
+├── run_pipeline.sh                     # Master pipeline script
+│
+├── shapefiles/                         # India state boundaries
+│   └── India_State_Boundary.*          # From AnujTiwari repo
+│
+├── brick_kiln_analysis/                # Kiln generation and emissions
+│   └── kiln_camx_analysis.py           # Main analysis script
+│
+├── camx_emissions/                     # Generated emission files
+│   ├── brick_kilns_2020.nc             # Gridded emissions (100% FCBK)
+│   ├── brick_kilns_2025.nc             # Gridded emissions (50% Zigzag)
+│   ├── brick_kilns_2020.ptsrc          # Point source format
+│   ├── brick_kilns_2025.ptsrc          # Point source format
+│   └── converted_kiln_ids.txt          # IDs of converted kilns (reproducibility)
+│
+├── camx_src/                           # CAMx v7.32 source code
+│   ├── Makefile                        # Build configuration
+│   └── [CAMx source modules]
+│
+├── run_camx/                           # CAMx execution
+│   ├── compile_camx.sh                 # Compilation script
+│   ├── CAMx.brick_kiln.job             # Run script (takes scenario as argument)
+│   ├── create_camx_inputs.py           # IC/BC/photolysis generator
+│   ├── analyze_camx_output.py          # Results analysis
+│   └── camx_inputs/                    # Generated input files
+│
+├── camx_output/                        # CAMx results
+│   ├── 2020/                           # Base scenario output
+│   └── 2025/                           # Converted scenario output
+│
+├── wrfcamx_v5.2/                       # WRF-CAMx preprocessor
+│   ├── camx_input/                     # Meteorology files (5 days)
+│   └── test_camx.job                   # WRFCAMx run script
+│
+└── figures/                            # Output visualizations
+    ├── brick_kiln_camx_analysis.png    # Main comprehensive figure
+    ├── camx_pm25_comparison.png        # CAMx output comparison
+    └── camx_delhi_comparison.png       # Delhi-specific results
+```
+
+---
+
+## Model Configuration
+
+### Domain Setup
+
+| Parameter | Value |
+|-----------|-------|
+| **Region** | India (covering UP and Delhi) |
+| **Grid Resolution** | 27 km × 27 km |
+| **Grid Size** | 100 × 100 cells |
+| **Vertical Layers** | 20 |
+| **Map Projection** | Mercator |
+| **Reference Point** | 83°E, 21.5°N |
+| **Simulation Period** | February 1-5, 2024 |
+
+### CAMx Configuration
+
+| Option | Setting |
+|--------|---------|
+| **Version** | CAMx v7.32 |
+| **Chemistry** | CB6r4 gas-phase mechanism |
+| **Aerosols** | CF3 COMPLX (ISORROPIA) |
+| **Advection** | PPM |
+| **Dry Deposition** | ZHANG03 |
+| **Wet Deposition** | Enabled |
+
+---
+
+## Brick Kiln Inventory
+
+### Generation Method
+
+10,000 kilns are randomly distributed across UP using cluster-based sampling:
+
+| Cluster | Location | Weight | Distance to Delhi |
+|---------|----------|--------|-------------------|
+| Western UP (Ghaziabad) | 77.8°E, 28.5°N | 25% | ~50 km |
+| Noida-Greater Noida | 77.4°E, 28.5°N | 20% | ~25 km |
+| Meerut-Muzaffarnagar | 77.7°E, 29.1°N | 15% | ~70 km |
+| Agra-Mathura | 78.0°E, 27.2°N | 12% | ~200 km |
+| Lucknow-Kanpur | 80.5°E, 26.8°N | 12% | ~500 km |
+| Varanasi-Allahabad | 82.5°E, 25.5°N | 10% | ~750 km |
+| Eastern UP | 83.5°E, 26.5°N | 6% | ~850 km |
+
+### Emission Factors
+
+| Kiln Type | PM2.5 (g/kg brick) | PM10 | NOx | SO2 | CO |
+|-----------|-------------------|------|-----|-----|-----|
+| **FCBK** | 0.75 | 1.20 | 0.30 | 0.80 | 15.0 |
+| **Zigzag** | 0.30 | 0.48 | 0.25 | 0.65 | 10.0 |
+
+*Source: CPCB India / GIZ Studies*
+
+### Production Parameters
+
+- Bricks per kiln per day: 25,000
+- Operating days per year: 180 (winter season)
+- Brick weight: 3.0 kg
+- Annual production per kiln: 13,500 tonnes bricks
+
+---
+
+## Scenario Comparison
+
+### Emissions
+
+| Scenario | PM2.5 (t/yr) | PM10 (t/yr) | NOx (t/yr) | SO2 (t/yr) |
+|----------|--------------|-------------|------------|------------|
+| **2020** (100% FCBK) | 101,250 | 162,000 | 40,500 | 108,000 |
+| **2025** (50% Zigzag) | 70,875 | 113,400 | 37,125 | 97,875 |
+| **Reduction** | **30,375 (30%)** | 48,600 (30%) | 3,375 (8%) | 10,125 (9%) |
+
+### Delhi Concentrations (from CAMx)
+
+| Metric | 2020 | 2025 | Reduction |
+|--------|------|------|-----------|
+| PM2.5 from brick kilns | 6.30 µg/m³ | 4.52 µg/m³ | 1.78 µg/m³ (28%) |
+| Percentage of total Delhi PM2.5 | ~7% | ~5% | - |
+
+---
+
+## Reproducibility
+
+### Converted Kiln IDs
+
+The random selection of kilns converted to Zigzag is saved for reproducibility:
 
 ```bash
-cd brick_kiln_analysis
-python3 brick_kiln_simulation.py
+# Check which kilns were converted
+head camx_emissions/converted_kiln_ids.txt
+
+# Output:
+# Kiln IDs converted from FCBK to Zigzag in 2025 scenario
+# Total converted: 5000 out of 10000
+# Random seed: 42
+# 0
+# 3
+# 7
+# ...
 ```
 
-This generates the impact analysis and visualizations using a simplified Gaussian dispersion model.
+### Random Seed
+
+All random processes use `np.random.seed(42)` for reproducibility.
 
 ---
 
-## Data Sources
+## Prerequisites
 
-| Data | Source | Version |
-|------|--------|---------|
-| **Meteorology** | WRF Model | v4.x |
-| **Global Emissions** | EDGAR | v8.1 (2024) |
-| **Brick Kiln EFs** | CPCB India / GIZ Studies | 2019-2022 |
-| **Population** | Census of India | 2011 (projected) |
+### System Requirements
 
-### EDGAR Data Download
+- Linux OS (tested on Ubuntu 20.04+)
+- Python 3.8+
+- gfortran compiler
+- NetCDF libraries (libnetcdf-dev, libnetcdff-dev)
 
-1. Visit: https://edgar.jrc.ec.europa.eu/dataset_ap81
-2. Download for India region:
-   - PM2.5, PM10, BC, OC, NOx, SO2, CO, NH3
-   - Sector: NMM (Non-Metallic Minerals) or TOTAL
-3. Place files in `edgar_emissions/raw_data/`
+### Python Dependencies
 
----
+```bash
+uv pip install numpy matplotlib netCDF4 scipy geopandas geodatasets
+```
 
-## Model Components
+### Data Requirements
 
-### WRFCAMx v5.2
-Preprocessor that converts WRF meteorological output to CAMx-ready format:
-- 3D meteorology (T, P, humidity, winds)
-- 2D surface fields
-- Vertical diffusivity (Kv)
-- Land use categories
-
-### CAMx v7.32
-Comprehensive Air Quality Model with extensions:
-- CB6r4 gas-phase chemistry
-- CF aerosol module (ISORROPIA)
-- Zhang03 dry deposition
-- PPM advection solver
+| Data | Source | Included |
+|------|--------|----------|
+| India shapefiles | [AnujTiwari repo](https://github.com/AnujTiwari/India-State-and-Country-Shapefile-Updated-Jan-2020) | Yes |
+| WRF-CAMx meteorology | Pre-processed | Yes (5 days) |
+| CAMx source code | Ramboll | Yes (v7.32) |
+| NetCDF libraries | System | Must install |
 
 ---
 
-## Limitations & Caveats
+## Compiling CAMx
 
-1. **Simplified dispersion**: The standalone analysis uses a Gaussian plume model, not full CAMx photochemistry
-2. **Temporal averaging**: Results represent annual/seasonal averages, not episodic events
-3. **Spatial resolution**: 27 km grid may not capture local hotspots
-4. **Linear scaling**: Assumes linear relationship between emissions and concentrations
-5. **Brick kiln locations**: Synthetic inventory based on district-level estimates
+If the CAMx executable doesn't exist:
+
+```bash
+cd run_camx
+./compile_camx.sh
+```
+
+This will:
+1. Compile CAMx v7.32 with gfortran
+2. Enable NetCDF4 output with compression
+3. Place executable in `run_camx/`
+
+---
+
+## Health Impact Assessment
+
+Using WHO IER functions for PM2.5:
+
+```
+Delhi Population: 32 million
+PM2.5 mortality coefficient: 0.6% per µg/m³
+Baseline all-cause mortality: 0.8%
+```
+
+### Results
+
+| Metric | 2020 | 2025 | Benefit |
+|--------|------|------|---------|
+| Brick kiln PM2.5 | 6.30 µg/m³ | 4.52 µg/m³ | -1.78 µg/m³ |
+| Attributable deaths | ~966/yr | ~691/yr | **~275 lives saved/yr** |
+
+---
+
+## Model Validation
+
+The model uses:
+- **Actual meteorology**: WRF-processed winds, temperature, mixing height from Feb 2024
+- **Same meteorology for both scenarios**: Only emissions differ
+- **Full chemistry**: CB6r4 gas-phase + CF3 aerosol thermodynamics
+- **Realistic deposition**: Zhang03 dry deposition + wet deposition
+
+---
+
+## Limitations
+
+1. **Grid resolution**: 27 km may not capture local hotspots
+2. **Temporal scope**: 5-day simulation (representative, not annual)
+3. **Kiln locations**: Statistical distribution, not GPS-verified
+4. **Secondary PM**: Partial accounting of secondary aerosol formation
+5. **Other sources**: Only brick kilns modeled, not total pollution budget
 
 ---
 
 ## Future Work
 
-- [ ] Add real brick kiln GPS locations from surveys
-- [ ] Include seasonal variation in kiln operations
-- [ ] Run full CAMx with chemistry for secondary PM formation
-- [ ] Add nested 9 km or 3 km domain for Delhi
-- [ ] Compare with CPCB monitoring station data
-- [ ] Extend to other cities (Lucknow, Patna, Kolkata)
+- [ ] Nested 9 km domain for Delhi NCR
+- [ ] Full year simulation with seasonal variation
+- [ ] GPS-verified kiln inventory integration
+- [ ] Comparison with CPCB monitoring stations
+- [ ] Source apportionment using OSAT/DDM
+- [ ] Cost-benefit analysis of kiln conversion
 
 ---
 
 ## References
 
 1. Maithel, S., et al. (2012). "Brick Kilns Performance Assessment." GIZ-MNRE.
-2. Weyant, C., et al. (2014). "Emissions and exposure from South Asian brick production." Environmental Science & Technology.
+2. Weyant, C., et al. (2014). "Emissions and exposure from South Asian brick production." ES&T.
 3. CPCB (2019). "Brick Kiln Emission Factors for India."
 4. RAMBOLL (2023). "CAMx User's Guide Version 7.32."
-5. EDGAR v8.1 (2024). https://edgar.jrc.ec.europa.eu/
+5. AnujTiwari (2020). "India State and Country Shapefiles." GitHub.
 
 ---
 
 ## Citation
 
-If you use this work, please cite:
-
 ```bibtex
 @software{wrf_brick_kiln_2024,
   author = {Batra, Nipun},
-  title = {Brick Kiln Air Quality Impact Analysis: WRF-CAMx Modeling for Delhi},
+  title = {Brick Kiln Air Quality Impact Analysis: Full WRF-CAMx Pipeline},
   year = {2024},
   url = {https://github.com/nipunbatra/wrf-brick-kiln}
 }
@@ -359,4 +386,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-*Last updated: January 2024*
+*Last updated: January 2025*

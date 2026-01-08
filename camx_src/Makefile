@@ -64,7 +64,7 @@ DUM_MPI = ./Dummy_MPI
 DUM_NCF = ./Dummy_NCF
 
 #ifndef MPI
-   MPI = false
+   MPI = true
 #endif
 #ifndef IEEE
    IEEE = false
@@ -247,7 +247,10 @@ else ifneq (, $(findstring $(COMPILER),absoft absoftomp))
 else ifneq (, $(findstring $(COMPILER),gfortran gfortranomp))
     FC = gfortran
     CC = gcc
-    FLGS=$(INCLUDES) -O2 -mcmodel=medium -J${MOD_DIR} -fno-align-commons -fconvert=big-endian -frecord-marker=4 -ffixed-line-length-0
+    FLGS=$(INCLUDES) -O2 -mcmodel=medium -J${MOD_DIR} \
+     -fno-align-commons -fconvert=big-endian \
+     -frecord-marker=4 -ffixed-line-length-0 \
+     -Wno-argument-mismatch
     MODULES=-I${MOD_DIR}
     ifneq (, $(findstring $(MPI_STRING),mpich MPICH mpich3 MPICH3 openmpi openMPI mvapich OPENMPI MVAPICH))
        FC = $(MPI_INST)/bin/mpif90
