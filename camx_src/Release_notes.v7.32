@@ -1,0 +1,379 @@
+RELEASE NOTES for CAMx v7.32, 08/01/25
+
+The Comprehensive Air Quality Model with extensions (CAMx) is available at
+www.camx.com.  
+
+v7.32 Modifications
+-------------------
+
+1. Added HONO to the definition of NOx for DDM.
+
+   Implications: Previously the DDM definition for the NOx group included only
+                 NO and NO2, now NOx includes HONO.
+
+2. Modified point source checking routines to allow sources with zero stack
+   parameters to be included in the simulations.
+
+   Implications: Previously, zero stack parameters were treated as errors
+                 and were ignored in the simulation since plume rise could
+                 not be determined. Now zero parameters for such point sources
+                 are set to defaults (height=1.0 m, diameter=0.1 m, 
+                 velocity=0.1 m/s) and are not dropped from the simulation.
+                 Localized changes to ozone and PM are to be expected in areas
+                 where these sources exist. 
+
+v7.32 Bug Fixes
+---------------
+
+1. Bug fix in allocating number of master grid boundary cells.
+
+   Implications: This was a non-fatal bug that led to array overflow, negligible
+                 impact on run results.
+
+2. Fixed bugs in DDM related to defining SOAP3 species and added tracking
+   glyoxal (CGLY) as a precursor for SOA.
+
+   Implications: These fixes are related to the number of new species and SOA
+                 production from glyoxal in the SOAP3 routine.
+
+3. Fixed a SOAP3 bug when not invoking the SOA class in SAT. Added checks
+   on whether SVOA is modeled to receive evaporated POA, and whether certain
+   sesquiterpene oxidation reaction rates are to be determined.
+
+   Implications: The PSAT bug resulted in a model stop when running PSAT without
+                 the SOA class. Other checks avoid setting variables that are
+                 not included in the run.
+
+4. Fixed bugs in setting up SAT internal tracer variable list from SAT NCF IC/BC
+   input files.
+
+   Implications: The NCF reading routine for SAT IC/BC files was reading "Z"
+                 (layer height) as an input tracer field. Also, IC/BC tracer
+                 names were not read at model restart. Both issues led to
+                 incorrectly setting up IC/BC tracer lists and resulted in model
+                 stops. No problems when using core model IC/BC files for SAT.
+
+5. Fixed numerous bugs and omissions related to the use of input (rather than
+   internally set) top concentrations for Probing Tools.
+
+   Implications: Probing Tools (SAT, DDM, RTRAC) were not reading or improperly
+                 using top BC data from input files (either supplied for the
+                 core model or explicit supplied for each Probing Tool). There
+                 are no problems when using internally diagnosed top BCs.
+                 Most of these issues have been fixed when top BC inputs
+                 for the core model are used for Probing Tools.
+                 RTRAC continues to ignore reading its own top BC inputs.
+                 SAT should not be supplied its own top BC inputs (use only
+                 regular model TC inputs or internally diagnosed).
+
+6. Fixed the NCF date/time checking routine to allow the model to cross into 
+   the New Year during the run.
+
+   Implications: Previously the model stopped when trying to run past December
+                 31 at 24:00.
+
+7. Fixed a minor bug reporting incorrect value of ACPA flag in NCF output meta
+   data.
+
+   Implications: The flag now properly reflects the correct APCA choice in the
+                 output files.
+
+8. Fixed PSAT to inject HOA into its tracer emissions array.
+
+   Implications: The bug led to zero emissions into HOA (primary organic
+                 aerosol) tracers leading to incorrect distribution of HOA
+                 concentrations to emissions regions/groups.
+
+9. Added APIN to CB6r4/5 chemparam files as a duplication of TERP.
+
+   Implications: CB6r4/5 mechanisms do not use APIN but require it to be 
+                 initialized to avoid array out of bounds.
+
+10. Certain reactions defined in DDM were being accessed that were not included
+    in the CB6r4/5 chemistry parameters files.
+
+   Implications: CB6r4/5 chemistry parameters files have been updated to be
+                 consistent with internally defined mechanisms. Use updated
+                 v7.32 CB6 chemistry parameters files.
+
+11. Fixed time synchronization of topcon input file with simulation time.
+
+   Implications: Topcon concentrations were not being updated, leading to model
+                 crashes.
+
+12. All MPI utility C routines are now concatenated into a single file under
+    the MPI/util directory.
+
+   Implications: This changes alleviates compile-time issues for some modern
+                 compiler versions.
+
+
+RELEASE NOTES for CAMx v7.31, 08/15/24
+
+v7.31 Bug Fixes
+---------------
+
+1. Fixed species indexing bugs reading SAT point source emission files.
+
+   Implications: This only occurred when using ozone source apportionment, and
+                 led to clearly bad results in core model oozne concentration
+                 fields.
+
+2. Reversed a coding error in SAT that led to an NCF routine reading
+   binary top boundary condition input files and a binary routine reading
+   NCF inputs.
+
+   Implications: This error only affected reading top boundary conditions
+                 for source apportionment.
+
+3. Fixed bugs in specifying number of tracer species for DDM and RTRAC in
+   several of their respective setup routines.
+
+   Implications:  This bug was related to the number of new tracers for
+                  the SOAP3 routine.
+
+
+RELEASE NOTES for CAMx v7.30, 06/24/24
+
+Overview of Version 7.30
+------------------------
+
+V7.30 includes new features, modifications, and bug fixes from the previous
+release (v7.20)
+
+* Use the chemistry parameters files specifically labeled for v7.3.
+* Use the TUV photolysis pre-processor specific to v7.3 that supports the CB7
+  and RACM2 photochemical mechanisms.
+* Check the CAMx control namelist template for the full list of control
+  variables specific to this version.
+* The operation of the CAMx makefile has not changed since the last version.
+  Type "make" or "make help" for more information.
+  NOTE: RECENT VERSIONS OF THE GFORTRAN COMPILER WILL NOT COMPILE CAMx
+        WITH OMP PARALLELIZATION BECAUSE OF AN INCOMPATIBILITY WITH BLOCK
+        DATA IN ISORROPIA. THIS IS NOT AN ISSUE WITH OTHER SUPPORTED COMPILERS.
+        OPTIONS:
+        a) USE MPI ONLY WITH GFORTRAN
+        b) REVERT BACK TO AN OLDER VERSION OF GFORTRAN
+        c) USE A DIFFERENT COMPILER
+
+
+v7.30 New Features and Major Updates
+------------------------------------
+
+1. Carbon Bond version 7, revision 1 (CB7r1) photochemical mechanism.
+   * Major update focusing on ozone chemistry of biogenic VOC (isoprene and
+     terpenes).
+   * Updated alkane chemistry larger than propane and associated ketones as
+     they represent a large fraction of anthropogenic VOC emissions.
+   * Updated iodine mechanism for ozone destruction.
+   * Updated rate constants for organic peroxy radical reactions to reflect
+     current information and improve mechanism efficiency.
+   * Adds explicit alpha-pinene SOA precursor for PSAT.
+                                                                               |
+   Implications: CB7r1 does not require any changes to how anthropogenic
+                 emission inventories are speciated for CAMx since it is
+                 backwards compatible with CB6.  However, to take full advantage
+                 of CB7, α-pinene (APIN) emissions should be separated from
+                 other terpenes (TERP) and include sesquiterpene (SQT).  CB7
+                 works with all Probing Tools.  Use the TUV photolysis
+                 pre-processor specific to v7.3 that supports CB7r1.  See the
+                 CAMx User's Guide for more information.  CB7r1 is less
+                 responsive to NOx emission reductions than CB6r5.
+
+2. Carbon Bond version 6, Revision 5, is extended with a full updated halogen
+   mechanism (CB6r5h) involving chlorine and bromine.  The halogen mechanism is
+   based on an extensive review of recent literature to identify reactions that
+   allow inorganic halogen emissions to interact fully with ozone, VOC and NOx.
+   Current reaction rate constant and photolytic reaction data were obtained
+   from the reviews published by NASA and IUPAC.  
+
+   Implications: CB6r5h replaces the earlier full halogen mechanism in CB6r2h.
+                 Inorganic iodine chemistry and associated in-line inorganic
+                 iodine emissions from oceans are maintained.  CB6r5h works
+                 with all Probing Tools.  Use the TUV photolysis pre-processor
+                 specific to v7.3 that supports CB6r5.  See the
+                 CAMx User's Guide for more information.
+
+3. Regional Atmospheric Chemistry Mechanism version 2, Spring 2021 update
+   (RACM2s21).
+
+   Implications: RACM2s21 includes an update to RACM2 based on a review focused
+                 on inorganic and photolysis reactions by making use of the most
+                 recent data compilation from NASA-JPL.  RACM2 works with all
+                 Probing Tools.  Use the TUV photolysis pre-processor specific
+                 to v7.3 that supports RACM2.  See the CAMx User's Guide for
+                 more information.
+
+4. The SOAP organic chemistry/partitioning module is updated to version 3
+   (SOAP3).  This update substantially revises the formation of organic
+   condensable gases and aerosols from VOC/IVOC/SVOC precursors.  See the User's
+   Guide for more information.
+
+   Implications:
+     1. SOAP3 species names have been changed to support this update and better
+        reflect precursors, sources, and volatility states.
+     1. Anthropogenic primary organic aerosol (POA) emissions can fractionally
+        evaporate to a semi-volatile gas species (SVOC) depending on temperature
+        and source type.  Emission can continue to specify a simple "POA"
+        species, for which an average evaporation rate is applied, or can 
+        specify POA from gas, diesel, general IC engines, meat cooking, biomass
+        burning, or other, for which unique evaporation rates are applied.
+        A "NOEVAP" option is available to revert back to SOAP2 with no POA 
+        evaporation.
+     2. SVOC can be emitted and produced by POA evaporation, and can further
+        oxidize and partition to SOA.  SOAP3 continues to support IVOC
+        emissions that similarly oxidize and partition to SOA.  To take full
+        advantage of SOAP3 updates, emission inputs should include estimates of
+        anthropogenic IVOC and SVOC.
+     3. VOC reaction yields generating condensable gases and non-volatile SOA
+        have been updated based on recent research.  This update is referred to
+        as the "complex" option.  A "simple" option is also available that
+        yields only non-volatile SOA from VOC oxidation reactions.
+     4. SOAP3 includes the production of non-volatile SOA from heterogeneous
+        glyoxal/methylglyoxal oxidation on aerosols.  Reactions have been
+        added to all supported gas phase mechanisms to support this update.
+       
+5. DDM has been extended to include the Chemical Sensitivity Analysis (CSA)
+   option that calculates the sensitivity of species concentrations to rate
+   constants and reaction stoichiometric coefficients defined in the gas-phase
+   chemical mechanism.  CSA is configured with a separate control file namelist
+   module.
+
+   Implications:  Unlike the standard DDM, chemical sensitivities are determined
+                  within a set of user-defined grid cells, providing
+                  computational efficiency comparable to box models while
+                  maintaining a complete sensitivity integration within CAMx.
+                  CSA operates only for gas-phase chemistry and cannot be
+                  invoked if aerosols are run.  CSA is currently not allowed
+                  with MPI parallelization but can be used with OMP
+                  parallelization.
+
+6. DDM has been extended to include sensitivity to dry deposition.  New DDM
+   namelist variables have been added for this feature.
+
+   Implications: Concentration sensitivities to dry deposition velocities can
+                 be calculated from either the Wesely or Zhang schemes.
+                 Deposition sensitivities track how a given species
+                 concentration responds to a change in the deposition velocity
+                 for that same species or any other influencing species.
+
+
+7. Removed the CMU multi-section PM size option.
+
+   Implications: Now the only aerosol size option is the static 2-mode CF.
+
+
+v7.30 Modifications
+-------------------
+
+1. The heterogeneous chemistry rate routine has been updated to ensure
+   consistent use of the gas-phase rate for N2O5 hydrolysis.
+
+   Implications: In gas-only chemistry mode, the N2O5 hydrolysis rate was
+                 reset to a higher value than provided in the chemistry
+                 parameters file. It is now consistent with the input rate.
+                 Expect negligible to minor impacts to some gases when running
+                 in gas-only mode. No impact to heterogeneous N2O5 hydrolysis.
+
+2. Updated chemistry parameters for certain compounds.
+
+   Implications: Molecular weights, Henry's Law solubility, and deposition
+                 parameters have been updated for some compounds based on
+                 current information, especially for SOAP species.  Negligible
+                 to minor effects are expected.
+
+3. The setting of temperature and pressure intervals for the internal reaction
+   rate lookup table has been automated.
+
+   Implications: This update removes the need for the user to adjust the number
+                 of T and P intervals when max/min T and P values need to be
+                 changed (i.e., as directed by a CAMx error message).
+
+v7.30 Bug Fixes
+---------------
+
+1. Fixed vertical advection codes to properly and consistently dimension DDM
+   sensitivity arrays.
+
+   Implications: Inconsistent array dimensions between calling and receiving
+                 routines led to accessing memory out of bounds.  This bug
+                 occurred under certain model memory configurations and
+                 resulted in confusing or obviously incorrect DDM results.
+
+2. Fixed a bug that was modifying lat/lon grid spacing from namelist input. 
+
+   Implications: This fix alleviates a model stop with error message when
+                 comparing user-defined lat/lon grid spacing against those read
+                 from gridded input files.
+
+3. Fixed a bug that was incorrectly writing RTRAC deposition variable names to
+   output file headers.
+
+   Implications:  Names in RTRAC header records were inconsistent with variable
+                  names written to hourly binary I/O records and inconsistent
+                  with other model deposition variables.
+
+4. Added check that users supply 4-digit years in the CAMx control namelist
+   file.
+
+   Implications:  Entering 2-digit years carried over to NCF output files, which
+                  are incompatible with Models-3 software.
+
+5. Added check that users supply ozone column and photolysis rates files with
+   correct Dobson Units and within expected ranges.
+
+   Implications: This check helps to ensure users are supplying modern O3MAP and
+                 photolysis files with correct DU units, as opposed to older
+                 files carrying DU/1000.
+
+6. Fixed a few incorrect CPA variable unit attributes on NCF output files.
+
+   Implications: No effect on CAMx results, simply correcting units attributes
+                 (e.g., "ppb hr-1") to more correctly reflect contents of each
+                 variable.
+
+7. Improved the memory allocation of point source emission array shape.
+
+   Implications: Certain portions of CAMx code were allocating point source
+                 memory using actual number of point sources read, while other
+                 portions were allocating based on a max parameter.  This 
+                 could lead to inconsistent memory shapes for the point array,
+                 which was discovered for DDM and led to inexplainable results.
+
+8. Fixed mass tracking bug in SA wet deposition.
+
+   Implications: The bug led to SA wet deposited mass that was inconsistent with
+                 core model deposition, leading to minor differences in
+                 reporting SA wet deposited mass.
+
+9. Fixed bug to include molecular weight when re-ordering species in READCHM.F
+
+   Implications: The model re-orders the incoming species list defined in the
+                 chemistry parameters input file for purposes of setting up
+                 the chemical solvers.  All species-related parameters
+                 were reordered except molecular weight, which could affect the
+                 conversion of output gas concentrations from ppm to ug/m3 when
+                 that option is invoked.
+
+10. Fixed code reading NCF RTRAC BC files.
+
+   Implications: RTRAC was not reading NCF BC files, but was properly
+                 reading Fortran binary BC files.
+
+11. Fixed bugs in surface model and added read of NCF surface model restart
+    files.
+
+   Implications: Several issues were found and fixed in the surface model code,
+                 including I/O files.  The surface model was lacking code to
+                 read surface model NCF output files for model restarts.
+
+12. Bug fix reading SA NCF point source plume bottom variable.
+
+   Implications: This fix results in a consistent treatment of plume rise between
+                 the core model and SA point source treatments.
+
+13. Fix bug to allow >99 MPI nodes in the names of node-specific .OUT and .DIAG output files.
+
+   Implications: Previously only two digits were written to the filenames,
+                 resulting in hash marks (#) when nodes>99.  Now up to 999 nodes
+                 are accommodated.

@@ -1,0 +1,87 @@
+#!/bin/csh
+set WRFPATH = /home/deenalad/codes/multiple_domain_wrf/d01
+set OUT     = ./camx_input
+if (! -d $OUT) mkdir $OUT
+
+# Use YYMMDD format (year 24, month, day) - juldate converts to Julian
+set DAY   = (240201 240202 240203 240204 240205)
+set DAYM1 = (240131 240201 240202 240203 240204)
+
+foreach i (1 2 3 4 5)
+   # Format is YYMMDDHH (8 digits) - concatenate date + hour
+   # Start times must align with WRF 3-hourly output (00, 03, 06, 09, 12, 15, 18, 21)
+   if ( $DAY[$i] == "240201" ) then
+      set START = $DAY[$i]"12"
+   else
+      set START = $DAY[$i]"00"
+   endif
+   set FIN = $DAY[$i]"24"
+
+   echo "Running CAMx for $START to $FIN"
+   ./src/wrfcamx << ieof
+Run note           |WRFCAMx Feb 2024
+CAMx nested grid   |T
+Diagnostic fields  |T
+Seaice adjustment  |F
+KV Method          |CMAQ
+Minimum Kv         |0.1
+Project            |MERCATOR
+Subgrid convecton  |DIAG
+Subgrid stratiform |T
+Start/end date     |$START $FIN
+WRF output freq    |180
+Grid time zone     |0
+CAMx grid size     |100, 100, 20
+CAMx Grid spacing  |27. 27.
+CAMx orig & params |-1714.5, -1714.5, 83., 21.5, 10., 10.
+Layer mapping      |1,2,4,6,8,11,14,17,20,23,26,29,32,35,38,41,44,46,48,50
+CAMx LU file       |$OUT/camx.lu.4km.nc
+CAMx 3D file       |$OUT/camx.3d.4km.20$DAY[$i].nc
+CAMx 2D file       |$OUT/camx.2d.4km.20$DAY[$i].nc
+CAMx Kv file       |$OUT/camx.kv.4km.20$DAY[$i].nc
+Input snow age     |./snow.file.$DAYM1[$i]
+Initial snow age   |36
+Output snow age    |./snow.file.$DAY[$i]
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_00:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_03:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_06:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_09:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_12:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_15:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_18:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-01_21:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_00:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_03:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_06:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_09:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_12:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_15:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_18:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-02_21:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_00:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_03:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_06:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_09:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_12:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_15:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_18:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-03_21:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_00:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_03:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_06:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_09:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_12:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_15:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_18:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-04_21:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_00:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_03:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_06:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_09:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_12:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_15:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_18:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-05_21:00:00
+WRF filename       |$WRFPATH/wrfout_d01_2024-02-06_00:00:00
+ieof
+end

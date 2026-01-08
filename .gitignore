@@ -1,0 +1,48 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C/Fortran compiled files
+*.o
+*.mod
+*.exe
+make_snow
+
+# Large data files are tracked via Git LFS (see .gitattributes)
+# CAMx meteorology NetCDF files in wrfcamx_v5.2/camx_input/ are included
+
+# Temporary files
+*.tmp
+*.log
+*.out
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Snow files (regenerated)
+snow.file.*
+
+# EDGAR raw data (too large, download separately)
+edgar_emissions/raw_data/
+
+# CAMx output (large)
+output/camx_results/*.nc
+camx_output/
+
+# Compiled CAMx executable
+camx_src/CAMx.v7.32.*
+
+# WRF input (external, too large)
+# wrf_input/
+
+# Keep figures
+!figures/*.png

@@ -1,0 +1,76 @@
+###FC = pgf90
+###FLGS = -O2 -Mnoframe -Mextend -Bstatic_pgi
+
+###FC = ifort
+###FLGS = -O2 -align dcommons -extend_source -ipo -static_intel
+
+FC = gfortran
+FLGS = -O2 -fno-align-commons -frecord-marker=4 -ffixed-line-length-0
+
+.SUFFIXES: .o .f90 .F90 .f
+
+NETCDF = /home/deenalad/WRF_env/BUILD_WRF/LIBRARIES/netcdf
+LIBS  = -L$(NETCDF)/lib -lnetcdff -lnetcdf
+INC   =  -I$(NETCDF)/include
+#FLAGG = -O2 -fconvert=big-endian -frecord-marker=4
+#FLAGG = -lnetcdf
+#CHUNK = -DCHUNK
+CHUNK =
+
+TARGT = wrfcamx
+
+OBJCTS = \
+NCF/wrf_netcdf.o \
+NCF/ncf_iomod.o \
+wrf_fields.o \
+camx_fields.o \
+buoyancy.o \
+clddiag.o \
+wrf_window.o \
+wrf_interp.o \
+kvcalc_myj.o \
+kvcalc_cmaq.o \
+kvcalc_ysu.o \
+lcpgeo.o \
+micromet.o \
+mrcgeo.o \
+parsedxy.o \
+pcpdiag.o \
+pspgeo.o \
+wrfcamx.o \
+readwrf.o \
+stats.o \
+utmgeo.o \
+vertmap.o \
+utils.o \
+NCF/ncf_closefiles.o \
+NCF/ncf_createfile.o \
+NCF/ncf_enddef_file.o \
+NCF/ncf_set_cache.o \
+NCF/ncf_set_global.o \
+NCF/ncf_set_tstep.o \
+NCF/ncf_set_varatt_2dsrf.o \
+NCF/ncf_set_varatt_3dcld.o \
+NCF/ncf_set_varatt_3dmet.o \
+NCF/ncf_set_varatt_grid.o \
+NCF/ncf_set_varatt_kv.o \
+NCF/ncf_wrt_data.o \
+NCF/ncf_wrt_data_grid.o \
+NCF/ncf_wrt_data_tstep.o \
+NCF/ncf_wrt_dim.o \
+NCF/ncf_wrt_global.o \
+NCF/ncf_wrt_global2.o \
+NCF/ncf_wrt_vars.o \
+NCF/ncf_wrt_vars_grid.o
+
+wrfcamx: $(OBJCTS) 
+	$(FC) -o $(TARGT) $(FLGS) $(OBJCTS) $(LIBS) $(FLAGG) $(INC)
+.F90.o:
+	$(FC) -c -o $@ $(FLGS) $(CHUNK) $(LIBS) $(FLAGG) $(INC) $<
+.f90.o:
+	$(FC) -c -o $@ $(FLGS) $(INC) $<
+.f.o:
+	$(FC) -c -o $@ $(FLGS) $(INC) $<
+
+clean:
+	rm -f $(OBJCTS) *.mod wrfcamx

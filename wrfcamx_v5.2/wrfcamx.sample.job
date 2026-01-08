@@ -1,0 +1,62 @@
+#!/bin/csh
+#
+# This is an example Linux C-shell script than runs WRFCAMx.
+# It is not specific to any application and all inputs
+# are not real files, only examples for naming conventions.
+# There are many ways to configure a script to handle
+# date manipulations and file path settings.
+#
+# This example loops over 5 days from June 1, 2005 to
+# June 5, 2005.  The DAYM1 variable is just a very simple
+# example of how you might specify the previous date for
+# reading snow files. There are many ways in Linux
+# scripting to do that.
+
+set PATH = "./wrf_output"
+set OUT  = "./camx_input"
+
+if (! -d $OUT) mkdir $OUT
+
+set DAY (050601 050602 050603 050604 050605)
+set DAYM1 (050531 060601 050602 050603 050604)
+foreach i (1 2 3 4 5)
+if( $DAY[$i] == "050601" ) then
+   set START = $DAY[$i]"12"
+else
+   set START = $DAY[$i]"00"
+endif
+set FIN   = $DAY[$i]"24"
+ 
+./src/wrfcamx << ieof 
+Run note           |Sample WRFCAMx job
+CAMx nested grid   |T
+Diagnostic fields  |T
+Seaice adjustment  |F
+KV Method          |MYJ
+Minimum Kv         |0.1
+Project            |LAMBERT
+Subgrid convecton  |DIAG
+Subgrid stratiform |T
+Start/end date     |$START $FIN
+WRF output freq    |60
+Grid time zone     |8
+CAMx grid size     |185, 185, 20
+CAMx Grid spacing  |4. 4.
+CAMx orig & params |-1072., -978., -100., 40., 60., 30.
+Layer mapping      |1,2,4,6,8,11,14,17,20,23,26,29,32,35,38,41,44,46,48,50
+CAMx LU file       |$OUT/camx.lu.4km.nc
+CAMx 3D file       |$OUT/camx.3d.4km.20$DAY.nc
+CAMx 2D file       |$OUT/camx.2d.4km.20$DAY.nc
+CAMx Kv file       |$OUT/camx.kv.4km.20$DAY.nc
+Input snow age     |./snow.file.$DAYM1[$i]
+Initial snow age   |36
+Output snow age    |./snow.file.$DAY[$i]
+WRF filename       |$PATH/wrfout_d02.20050601.00-23Z
+WRF filename       |$PATH/wrfout_d02.20050602.00-23Z
+WRF filename       |$PATH/wrfout_d02.20050603.00-23Z
+WRF filename       |$PATH/wrfout_d02.20050604.00-23Z
+WRF filename       |$PATH/wrfout_d02.20050605.00-23Z
+WRF filename       |$PATH/wrfout_d02.20050606.00-23Z
+ieof
+
+end

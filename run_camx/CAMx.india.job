@@ -1,0 +1,199 @@
+#!/bin/csh
+#
+# CAMx v7.32 Job Script for India Domain
+# Brick Kiln Emission Scenario Analysis
+#
+
+setenv NCPUS 12
+setenv OMP_NUM_THREADS 12
+setenv OMP_STACKSIZE 128M
+limit stacksize unlimited
+
+# =============================================================================
+# Directory Setup
+# =============================================================================
+set CAMX_ROOT = /home/deenalad/WRF_env/src.v7.32
+set WORK_DIR  = /home/nipun.batra/nipun.batra/git/wrf
+set MET_DIR   = $WORK_DIR/wrfcamx_v5.2/camx_input
+set EMIS_DIR  = $WORK_DIR/edgar_emissions/camx_emissions
+set OUTPUT    = $WORK_DIR/camx_output
+set INPUT     = $WORK_DIR/camx_input
+
+mkdir -p $OUTPUT
+mkdir -p $INPUT
+
+# =============================================================================
+# Scenario Selection
+# =============================================================================
+# Options: "base", "zigzag_50", "zigzag_100", "vsbk_100", "tunnel_100"
+set SCENARIO = "base"
+
+# =============================================================================
+# Run Configuration
+# =============================================================================
+set RUN       = "india.27km.$SCENARIO"
+set EXEC      = "$CAMX_ROOT/CAMx.v7.32.noMPI.gfort"  # Adjust based on compiled executable
+
+# Check if executable exists
+if (! -e $EXEC) then
+   echo "ERROR: CAMx executable not found at $EXEC"
+   echo "Please compile CAMx first:"
+   echo "  cd $CAMX_ROOT"
+   echo "  make"
+   exit 1
+endif
+
+# =============================================================================
+# Date Loop
+# =============================================================================
+set RESTART = "NO"
+
+foreach today (01.032 02.033 03.034 04.035 05.036)
+   set CAL = $today:r
+   set JUL = $today:e
+   set CALDAY = 202402${CAL}
+   set YESTERDAY = `echo ${CALDAY} | awk '{printf("%d",$1-1)}'`
+
+   if (${RESTART} == "NO") then
+      set RESTART_FLAG = "false"
+   else
+      set RESTART_FLAG = "true"
+   endif
+
+   echo "=============================================="
+   echo "Running CAMx for $CALDAY (Julian $JUL)"
+   echo "Scenario: $SCENARIO"
+   echo "=============================================="
+
+# =============================================================================
+# Create Namelist
+# =============================================================================
+cat << EOF > CAMx.in
+
+ &CAMx_Control
+
+ Run_Message      = 'CAMx 7.32 India Domain -- Brick Kiln Scenario $SCENARIO -- $CALDAY',
+
+!--- Model clock control ---
+
+ Time_Zone        = 0,                 ! UTC
+ Restart          = .${RESTART_FLAG}.,
+ Start_Date_Hour  = 2024,02,${CAL},0000,
+ End_Date_Hour    = 2024,02,${CAL},2400,
+
+ Maximum_Timestep    = 15.,            ! minutes
+ Met_Input_Frequency = 180.,           ! 3-hourly WRF output
+ Ems_Input_Frequency = 60.,            ! minutes
+ Output_Frequency    = 60.,            ! minutes
+
+!--- Map projection parameters (Mercator for India) ---
+
+ Map_Projection = 'MERCATOR',
+ UTM_Zone       = 0,
+ Longitude_Pole = 83.,        ! Central longitude
+ Latitude_Pole  = 21.5,       ! Central latitude
+ True_Latitude1 = 10.,        ! True latitude
+ True_Latitude2 = 10.,
+
+!--- Parameters for the master grid ---
+
+ Number_of_Grids      = 1,
+ Master_SW_XCoord     = -1714.5,       ! km, SW corner
+ Master_SW_YCoord     = -1714.5,       ! km, SW corner
+ Master_Cell_XSize    = 27.,           ! km
+ Master_Cell_YSize    = 27.,           ! km
+ Master_Grid_Columns  = 100,           ! 102 - 2 buffer
+ Master_Grid_Rows     = 100,
+ Number_of_Layers     = 20,
+
+!--- Model options ---
+
+ Diagnostic_Error_Check = .false.,
+ Flexi_Nest             = .false.,
+ Advection_Solver       = 'PPM',
+ Vadvection_Solver      = 'IMPLICIT',
+ Chemistry_Solver       = 'EBI',
+ PiG_Submodel           = 'None',
+ Probing_Tool           = 'None',
+ Chemistry              = .true.,
+ Drydep_Model           = 'ZHANG03',
+ Bidi_NH3_Drydep        = .false.,
+ Wet_Deposition         = .true.,
+ ACM2_Diffusion         = .false.,
+ Surface_Model          = .false.,
+ Inline_Ix_Emissions    = 'TRUE',
+ Super_Stepping         = .true.,
+ Gridded_Emissions      = .true.,
+ Point_Emissions        = .false.,
+ Ignore_Emission_Dates  = .true.,
+
+!--- Output specifications ---
+
+ Root_Output_Name         = '$OUTPUT/CAMx.$RUN.${CALDAY}',
+ Average_Output_3D        = .false.,
+ NetCDF_Format_Output     = .true.,
+ NetCDF_Use_Compression   = .true.,
+
+ ! Output key air quality species
+ Output_Species_Names(1)   = 'NO',
+ Output_Species_Names(2)   = 'NO2',
+ Output_Species_Names(3)   = 'O3',
+ Output_Species_Names(4)   = 'SO2',
+ Output_Species_Names(5)   = 'CO',
+ Output_Species_Names(6)   = 'NH3',
+ Output_Species_Names(7)   = 'HNO3',
+ Output_Species_Names(8)   = 'H2O2',
+ Output_Species_Names(9)   = 'PNO3',
+ Output_Species_Names(10)  = 'PSO4',
+ Output_Species_Names(11)  = 'PNH4',
+ Output_Species_Names(12)  = 'PEC',
+ Output_Species_Names(13)  = 'POA',
+ Output_Species_Names(14)  = 'FPRM',
+ Output_Species_Names(15)  = 'CPRM',
+ Output_Species_Names(16)  = 'FCRS',
+ Output_Species_Names(17)  = 'CCRS',
+
+!--- Input files ---
+
+ Chemistry_Parameters = '$INPUT/CAMx7.32.chemparam.CB6r4_CF3_COMPLX',
+ Photolysis_Rates     = '$INPUT/tuv.india.${CALDAY}',
+ Ozone_Column         = '$INPUT/o3map.202402.txt',
+ Initial_Conditions   = '$INPUT/ic.india.${CALDAY}.nc',
+ Boundary_Conditions  = '$INPUT/bc.india.${CALDAY}.nc',
+ Master_Grid_Restart  = '$OUTPUT/CAMx.$RUN.${YESTERDAY}.inst',
+ Nested_Grid_Restart  = ' ',
+ PiG_Restart          = ' ',
+
+ Surface_Grid(1) = '$MET_DIR/camx.lu.4km.nc',
+ Met3D_Grid(1)   = '$MET_DIR/camx.3d.4km.20${CALDAY}.nc',
+ Met2D_Grid(1)   = '$MET_DIR/camx.2d.4km.20${CALDAY}.nc',
+ Vdiff_Grid(1)   = '$MET_DIR/camx.kv.4km.20${CALDAY}.nc.CMAQ',
+
+ ! Emissions - select based on scenario
+ Emiss_Grid(1,1) = '$EMIS_DIR/camx_emis.${SCENARIO}.${CALDAY}.nc',
+
+ /
+!-------------------------------------------------------------------------------
+
+EOF
+
+# =============================================================================
+# Execute CAMx
+# =============================================================================
+   echo "Starting CAMx..."
+   time $EXEC
+
+   if ($status != 0) then
+      echo "ERROR: CAMx failed for $CALDAY"
+      exit 1
+   endif
+
+   echo "Completed: $CALDAY"
+   set RESTART = "YES"
+
+end
+
+echo "=============================================="
+echo "All days completed successfully!"
+echo "Output files in: $OUTPUT"
+echo "=============================================="
